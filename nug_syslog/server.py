@@ -2,7 +2,7 @@ import asyncio
 import logging
 import re
 import sqlite3
-import syslog
+import uuid
 from argparse import Namespace
 from asyncio import DatagramProtocol
 
@@ -23,7 +23,11 @@ class SyslogServer(DatagramProtocol):
         message = data.group(2)
 
         cursor = self._db.cursor()
-        cursor.execute("insert into logs (host, level, message) values (?, ?, ?)", (addr[0], level, message))
+        cursor.execute(
+            "insert into logs (id, host, level, message, created_at, updated_at) "
+            "values (?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)",
+            (str(uuid.uuid4()), addr[0], level, message)
+        )
         cursor.close()
         self._db.commit()
 
